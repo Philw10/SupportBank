@@ -1,17 +1,24 @@
 package training.supportbank;
 
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 
 public class Main {
+
+    private static final Logger LOGGER = LogManager.getLogger();
+
     public static void main(String[] args) {
+        LOGGER.error("File Started to run");
         Scanner inputScanner = new Scanner(System.in);
         String option = null;
 
         List<Transaction> transactions = getTransactions();
         Bank accountTransaction = runTransactions(transactions);
-
 
         while (!Objects.equals(option, "E")) {
             System.out.println("What would you like to do? 1.List All, 2.List [Account name]");
@@ -33,31 +40,41 @@ public class Main {
 
     private static List<Transaction> getTransactions() {
         ArrayList<Transaction> transactions = new ArrayList<>();
+        Integer lineBeingRead = 2;
         try {
-            File file = new File("Transactions2014.csv");
+            File file = new File("DodgyTransactions2015.csv");
             Scanner fileScanner = new Scanner(file);
 
             fileScanner.nextLine();
             while (fileScanner.hasNextLine()) {
+
                 String data = fileScanner.nextLine();
+                try {
+                    Scanner comma = new Scanner(data);
+                    comma.useDelimiter(",");
+                    String date = comma.next();
+                    String from = comma.next();
+                    String to = comma.next();
+                    String narrative = comma.next();
+                    String amount = comma.next();
 
-                Scanner comma = new Scanner(data);
-                comma.useDelimiter(",");
-                String date = comma.next();
-                String from = comma.next();
-                String to = comma.next();
-                String narrative = comma.next();
-                String amount = comma.next();
+                    Transaction newImport = new Transaction(date, from, to, narrative, Float.parseFloat(amount));
 
-                Transaction newImport = new Transaction(date, from, to, narrative, Float.parseFloat(amount));
-
-                transactions.add(newImport);
+                    transactions.add(newImport);
+                    lineBeingRead = lineBeingRead + 1;
+                } catch (Exception x) {
+                    System.out.println("An error occurred on line " + lineBeingRead + " of the document. Error as follows:-");
+                    System.out.println(x + ".  This line has been excluded from the accounts.");
+                    LOGGER.error(x + " error on line " + lineBeingRead + " of CSV");
+                }
             }
             fileScanner.close();
         } catch (FileNotFoundException e) {
             System.out.println("An error occurred.");
+            LOGGER.error("Error occurred", e);
             e.printStackTrace();
         }
+        LOGGER.error("File import complete");
         return transactions;
     }
 
@@ -80,6 +97,7 @@ public class Main {
                 accountTransaction.moneyOut(transaction.from, transaction.amount);
             }
         }
+        LOGGER.error("Account transactions complete");
         return accountTransaction;
     }
 

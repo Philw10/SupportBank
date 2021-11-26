@@ -25,7 +25,6 @@ public class Bank {
             entry = itr.next();
             System.out.println(entry.getKey() + " = £" + entry.getValue());
         }
-
     }
 
     public boolean returnAccountStatus() {
